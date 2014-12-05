@@ -1,0 +1,32 @@
+function [ein, eout, model] = svm_polinomial_kernel(x_train, y_train, x_test, y_test, c, Q)
+    
+    addpath('libsvm-3.20/windows');
+
+    % model = svmtrain(training_label_vector, training_instance_matrix, 'libsvm_options')
+    % polynomial kernel: (gamma*u'*v + coef0)^degree
+
+    libsvm_options = char(strcat(...
+        {'-s 0 '},... % svm_type
+        {'-t 1 '},... % kernel_type : set type of kernel function
+        {'-d '}, {num2str(Q)}, {' '},... % degree : set degree in kernel function
+        {'-g 1 '},... % gamma : set gamma in kernel function
+        {'-r 1 '},... % coef0 : set coef0 in kernel function
+        {'-c '}, {num2str(c)}, {' '},... % cost : set the parameter C of C-SVC, epsilon-SVR, and nu-SVR
+        {'-b 1 '},... % probability_estimates : whether to train a SVC or SVR model for probability estimates, 0 or 1
+        {'-h 0 '},... % shrinking : whether to use the shrinking heuristics, 0 or 1
+        {'-q'}... % quiet mode (no outputs)
+    ));
+
+    model = svmtrain(y_train, x_train, libsvm_options);
+
+    % [predicted_label] = svmpredict(testing_label_vector, testing_instance_matrix, model, 'libsvm_options')
+    [predicted_label] = svmpredict(y_train, x_train, model, '-q');
+
+    ein = mean (sign(predicted_label) ~= y_train);
+
+    [predicted_label] = svmpredict(y_test, x_test, model, '-q');
+
+    eout = mean (sign(predicted_label) ~= y_test);
+        
+end
+
